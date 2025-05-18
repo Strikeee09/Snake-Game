@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <link href="index.css" rel="stylesheet">
+    <style>
+        html, body {
+            padding: 20px;
+            text-align: center;
+        }
+        .grid {
+            margin: 0 auto;
+            text-align: center;
+            width: 400px;
+            height: 400px;
+            border: solid 2px black;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        button {
+            font-size: larger;
+            font-weight: bold;
+            padding: 10px 20px;
+        }
+        .box {
+            width: 40px;
+            height: 40px;
+        }
+        .snake {
+            background-color: green;
+        }
+        .fruit {
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Snake Game</h1>
+    <button id="start">Start Game</button>
+    <h2>Score: <span id="score">0</span></h2>
+    <div class="grid"></div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const grid = document.querySelector(".grid");
+            const startButton = document.getElementById("start");
+            const scoreDisplay = document.getElementById("score");
+            let boxes = [];
+            let snake = [45];
+            let fruit = [];
+            let timerId;
+            let direction = 1; // initially moving right
+
+            startButton.addEventListener("click", startGame);
+
+            function startGame() {
+                createGrid();
+                clearInterval(timerId);
+                document.addEventListener("keyup", control);
+                timerId = setInterval(move, 1000);
+            }
+
+            function createGrid() {
+                boxes = [];
+                snake = [45];
+                fruit = [];
+                grid.innerHTML = '';
+                for (let i = 0; i < 100; i++) {
+                    const div = document.createElement("div");
+                    grid.appendChild(div);
+                    div.classList.add("box");
+                    boxes.push(div);
+                }
+                updateSnake();
+                generateFruit();
+                updateScore();
+            }
+
+            function updateSnake() {
+                boxes.forEach(box => box.classList.remove("snake"));
+                snake.forEach(index => boxes[index].classList.add("snake"));
+            }
+
+            function generateFruit() {
+                let newFruitIndex;
+                do {
+                    newFruitIndex = Math.floor(Math.random() * 100);
+                } while (snake.includes(newFruitIndex));
+                fruit = [newFruitIndex];
+                boxes[newFruitIndex].classList.add("fruit");
+            }
+
+            function updateScore() {
+                scoreDisplay.textContent = snake.length - 1;
+            }
+
+            function move() {
+                const head = snake[0];
+                let newHead;
+                if (direction === 1 && (head % 10 === 9)) {
+                    newHead = head - 9;
+                } else if (direction === -1 && (head % 10 === 0)) {
+                    newHead = head + 9;
+                } else if (direction === 10 && head >= 90) {
+                    newHead = head - 90;
+                } else if (direction === -10 && head < 10) {
+                    newHead = head + 90;
+                } else {
+                    newHead = head + direction;
+                }
+
+                if (snake.includes(newHead) || newHead < 0 || newHead >= 100) {
+                    clearInterval(timerId);
+                    grid.innerHTML = '<h2>Sorry, You lost</h2>';
+                    return;
+                }
+
+                snake.unshift(newHead);
+                if (fruit.includes(newHead)) {
+                    fruit = [];
+                    boxes[newHead].classList.remove("fruit");
+                    generateFruit();
+                } else {
+                    const tail = snake.pop();
+                    boxes[tail].classList.remove("snake");
+                }
+                updateSnake();
+                updateScore();
+            }
+
+            function control(e) {
+                if (e.key === "ArrowUp" && direction !== 10) {
+                    direction = -10;
+                } else if (e.key === "ArrowDown" && direction !== -10) {
+                    direction = 10;
+                } else if (e.key === "ArrowLeft" && direction !== 1) {
+                    direction = -1;
+                } else if (e.key === "ArrowRight" && direction !== -1) {
+                    direction = 1;
+                }
+                clearInterval(timerId);
+                timerId = setInterval(move, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
